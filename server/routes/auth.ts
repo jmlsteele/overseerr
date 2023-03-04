@@ -44,6 +44,7 @@ authRoutes.post('/plex', async (req, res, next) => {
     // Next let's see if the user already exists
     let user = await userRepository
       .createQueryBuilder('user')
+      .leftJoinAndSelect('user.settings', 'settings')
       .where('user.plexId = :id', { id: account.id })
       .orWhere('user.email = :email', {
         email: account.email.toLowerCase(),
@@ -165,6 +166,13 @@ authRoutes.post('/plex', async (req, res, next) => {
           message: 'Access denied.',
         });
       }
+    }
+
+    if (user?.settings?.disablePlexAuth) {
+      return next({
+        status: 403,
+        message: 'Plex Auth disabled.',
+      });
     }
 
     // Set logged in session

@@ -51,6 +51,7 @@ userSettingsRoutes.get<{ id: string }, UserSettingsGeneralResponse>(
 
       return res.status(200).json({
         username: user.username,
+        disablePlexAuth: user.settings?.disablePlexAuth,
         discordId: user.settings?.discordId,
         locale: user.settings?.locale,
         region: user.settings?.region,
@@ -112,6 +113,7 @@ userSettingsRoutes.post<
     if (!user.settings) {
       user.settings = new UserSettings({
         user: req.user,
+        disablePlexAuth: req.body.disablePlexAuth,
         discordId: req.body.discordId,
         locale: req.body.locale,
         region: req.body.region,
@@ -120,6 +122,7 @@ userSettingsRoutes.post<
         watchlistSyncTv: req.body.watchlistSyncTv,
       });
     } else {
+      user.settings.disablePlexAuth = req.body.disablePlexAuth;
       user.settings.discordId = req.body.discordId;
       user.settings.locale = req.body.locale;
       user.settings.region = req.body.region;
@@ -132,6 +135,7 @@ userSettingsRoutes.post<
 
     return res.status(200).json({
       username: user.username,
+      disablePlexAuth: user.settings.disablePlexAuth,
       discordId: user.settings.discordId,
       locale: user.settings.locale,
       region: user.settings.region,
@@ -314,6 +318,7 @@ userSettingsRoutes.post<{ id: string }, UserSettingsNotificationsResponse>(
         user.settings = new UserSettings({
           user: req.user,
           pgpKey: req.body.pgpKey,
+          disablePlexAuth: req.body.disablePlexAuth,
           discordId: req.body.discordId,
           pushbulletAccessToken: req.body.pushbulletAccessToken,
           pushoverApplicationToken: req.body.pushoverApplicationToken,
@@ -324,6 +329,7 @@ userSettingsRoutes.post<{ id: string }, UserSettingsNotificationsResponse>(
         });
       } else {
         user.settings.pgpKey = req.body.pgpKey;
+        user.settings.disablePlexAuth = req.body.disablePlexAuth;
         user.settings.discordId = req.body.discordId;
         user.settings.pushbulletAccessToken = req.body.pushbulletAccessToken;
         user.settings.pushoverApplicationToken =

@@ -30,6 +30,9 @@ const messages = defineMessages({
   accounttype: 'Account Type',
   plexuser: 'Plex User',
   localuser: 'Local User',
+  disableOwnPlexAuthWithoutPassword: 'Set a password first',
+  disablePlexAuth: 'Disable Plex Auth',
+  disablePlexAuthTip: 'Prevent this user from logging in via Plex',
   role: 'Role',
   owner: 'Owner',
   admin: 'Admin',
@@ -81,6 +84,10 @@ const UserGeneralSettings = () => {
     user ? `/api/v1/user/${user?.id}/settings/main` : null
   );
 
+  const { data: password, error: passwordError } = useSWR<{
+    hasPassword: boolean;
+  }>(user ? `/api/v1/user/${user?.id}/settings/password` : null);
+
   const UserGeneralSettingsSchema = Yup.object().shape({
     discordId: Yup.string()
       .nullable()
@@ -96,11 +103,11 @@ const UserGeneralSettings = () => {
     );
   }, [data]);
 
-  if (!data && !error) {
+  if ((!data || !password) && !error && !passwordError) {
     return <LoadingSpinner />;
   }
 
-  if (!data) {
+  if (!data || !password) {
     return <Error statusCode={500} />;
   }
 
@@ -119,6 +126,7 @@ const UserGeneralSettings = () => {
       </div>
       <Formik
         initialValues={{
+          disablePlexAuth: data?.disablePlexAuth,
           displayName: data?.username,
           discordId: data?.discordId,
           locale: data?.locale,
@@ -137,6 +145,7 @@ const UserGeneralSettings = () => {
           try {
             await axios.post(`/api/v1/user/${user?.id}/settings/main`, {
               username: values.displayName,
+              disablePlexAuth: values.disablePlexAuth,
               discordId: values.discordId,
               locale: values.locale,
               region: values.region,
@@ -182,6 +191,9 @@ const UserGeneralSettings = () => {
           values,
           setFieldValue,
         }) => {
+          const disablePlexAuthDisabled =
+            user?.userType !== UserType.PLEX ||
+            (currentUser?.id === user?.id && !password.hasPassword);
           return (
             <Form className="section">
               <div className="form-row">
@@ -199,6 +211,41 @@ const UserGeneralSettings = () => {
                         {intl.formatMessage(messages.localuser)}
                       </Badge>
                     )}
+                  </div>
+                </div>
+              </div>
+              <div className="form-row">
+                <label htmlFor="disablePlexAuth" className="checkbox-label">
+                  <span>{intl.formatMessage(messages.disablePlexAuth)}</span>
+                </label>
+                <div
+                  className={`form-input-area ${
+                    disablePlexAuthDisabled ? 'opacity-50' : ''
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <div className="mb-4 flex items-center">
+                      <label>
+                        <Field
+                          id="disablePlexAuth"
+                          name="disablePlexAuth"
+                          type="checkbox"
+                          disabled={disablePlexAuthDisabled}
+                        />
+                        <span className="ml-2 text-gray-300">
+                          {intl.formatMessage(messages.disablePlexAuthTip)}
+                          {currentUser?.id === user?.id &&
+                            !password.hasPassword && (
+                              <span className="error opacity-80">
+                                {' '}
+                                {intl.formatMessage(
+                                  messages.disableOwnPlexAuthWithoutPassword
+                                )}
+                              </span>
+                            )}
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>

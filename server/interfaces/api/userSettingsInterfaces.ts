@@ -2,6 +2,7 @@ import type { NotificationAgentKey } from '@server/lib/settings';
 
 export interface UserSettingsGeneralResponse {
   username?: string;
+  disablePlexAuth?: boolean;
   discordId?: string;
   locale?: string;
   region?: string;
